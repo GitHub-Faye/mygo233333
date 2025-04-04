@@ -1,24 +1,42 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics 🚀 AGPL-3.0 许可证 - https://ultralytics.com/license
 
 # Global configuration YAML with settings and arguments for Ultralytics Solutions
+# 用于Ultralytics解决方案的全局配置YAML，包含设置和参数
 # For documentation see https://docs.ultralytics.com/solutions/
+# 文档详见 https://docs.ultralytics.com/solutions/
 
 # Object counting settings  --------------------------------------------------------------------------------------------
+# 目标计数设置  --------------------------------------------------------------------------------------------
 region: # list[tuple[int, int]] object counting, queue or speed estimation region points.
+       # 列表[元组[int, int]] 目标计数、队列或速度估计区域点。
 show_in: True # (bool) flag to display objects moving *into* the defined region
+              # (布尔值) 显示移动*进入*定义区域的对象的标志
 show_out: True # (bool) flag to display objects moving *out of* the defined region
+               # (布尔值) 显示移动*离开*定义区域的对象的标志
 
 # Heatmaps settings ----------------------------------------------------------------------------------------------------
+# 热图设置 ----------------------------------------------------------------------------------------------------
 colormap: #  (int | str) colormap for heatmap, Only OPENCV supported colormaps can be used.
+          #  (整数 | 字符串) 热图的颜色映射，只能使用OPENCV支持的颜色映射。
 
 # Workouts monitoring settings -----------------------------------------------------------------------------------------
+# 运动监测设置 -----------------------------------------------------------------------------------------
 up_angle: 145.0 # (float) Workouts up_angle for counts, 145.0 is default value.
+                # (浮点数) 运动上角度计数，默认值为145.0。
 down_angle: 90 # (float) Workouts down_angle for counts, 90 is default value. Y
+               # (浮点数) 运动下角度计数，默认值为90。
 kpts: [6, 8, 10] # (list[int]) keypoints for workouts monitoring, i.e. for push-ups kpts have values of [6, 8, 10].
+                 # (整数列表) 用于运动监测的关键点，例如俯卧撑的关键点值为[6, 8, 10]。
 
 # Analytics settings ---------------------------------------------------------------------------------------------------
+# 分析设置 ---------------------------------------------------------------------------------------------------
 analytics_type: "line" # (str) analytics type i.e "line", "pie", "bar" or "area" charts.
+                       # (字符串) 分析类型，即"线形"、"饼图"、"条形图"或"面积图"。
 json_file: # (str) parking system regions file path.
+          # (字符串) 停车系统区域文件路径。
 
 # Security alarm system settings ---------------------------------------------------------------------------------------
+# 安全警报系统设置 ---------------------------------------------------------------------------------------
 records: 5 # (int) Total detections count to send an email about security
+           # (整数) 发送安全电子邮件的总检测计数

@@ -1,21 +1,36 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics 🚀 AGPL-3.0 许可证 - https://ultralytics.com/license
 
 # Default Ultralytics settings for BoT-SORT tracker when using mode="track"
+# 使用mode="track"时BoT-SORT跟踪器的默认Ultralytics设置
 # For documentation and examples see https://docs.ultralytics.com/modes/track/
+# 文档和示例请参见 https://docs.ultralytics.com/modes/track/
 # For BoT-SORT source code see https://github.com/NirAharon/BoT-SORT
+# BoT-SORT源代码请参见 https://github.com/NirAharon/BoT-SORT
 
 tracker_type: botsort # tracker type, ['botsort', 'bytetrack']
+                      # 跟踪器类型，['botsort', 'bytetrack']
 track_high_thresh: 0.25 # threshold for the first association
+                        # 第一次关联的阈值
 track_low_thresh: 0.1 # threshold for the second association
+                      # 第二次关联的阈值
 new_track_thresh: 0.25 # threshold for init new track if the detection does not match any tracks
+                       # 如果检测结果不匹配任何跟踪，初始化新跟踪的阈值
 track_buffer: 30 # buffer to calculate the time when to remove tracks
+                 # 计算何时移除跟踪的缓冲区
 match_thresh: 0.8 # threshold for matching tracks
+                  # 匹配跟踪的阈值
 fuse_score: True # Whether to fuse confidence scores with the iou distances before matching
+                 # 在匹配前是否融合置信度分数与IOU距离
 # min_box_area: 10  # threshold for min box areas(for tracker evaluation, not used for now)
+                    # 最小框面积的阈值（用于跟踪器评估，目前未使用）
 
 # BoT-SORT settings
+# BoT-SORT设置
 gmc_method: sparseOptFlow # method of global motion compensation
+                         # 全局运动补偿方法
 # ReID model related thresh (not supported yet)
-proximity_thresh: 0.5
-appearance_thresh: 0.25
-with_reid: False
+# ReID模型相关阈值（尚不支持）
+proximity_thresh: 0.5 # 邻近阈值
+appearance_thresh: 0.25 # 外观阈值
+with_reid: False # 是否使用ReID

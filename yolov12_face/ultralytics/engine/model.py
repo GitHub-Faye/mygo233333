@@ -1,20 +1,20 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license  # Ultralytics 🚀 AGPL-3.0 许可证 - 查看链接获取许可证详情
 
-import inspect
-from pathlib import Path
-from typing import Any, Dict, List, Union
+import inspect  # 导入inspect模块，用于检查对象
+from pathlib import Path  # 导入Path类，用于处理文件路径
+from typing import Any, Dict, List, Union  # 导入类型提示相关模块
 
-import numpy as np
-import torch
-from PIL import Image
+import numpy as np  # 导入numpy库，用于数值计算
+import torch  # 导入PyTorch库
+from PIL import Image  # 导入PIL库的Image类，用于图像处理
 
-from huggingface_hub import PyTorchModelHubMixin
+from huggingface_hub import PyTorchModelHubMixin  # 导入HuggingFace Hub的PyTorch模型混入类
 
-from ultralytics.cfg import TASK2DATA, get_cfg, get_save_dir
-from ultralytics.engine.results import Results
-from ultralytics.hub import HUB_WEB_ROOT, HUBTrainingSession
-from ultralytics.nn.tasks import attempt_load_one_weight, guess_model_task, nn, yaml_model_load
-from ultralytics.utils import (
+from ultralytics.cfg import TASK2DATA, get_cfg, get_save_dir  # 导入配置相关函数和常量
+from ultralytics.engine.results import Results  # 导入结果处理类
+from ultralytics.hub import HUB_WEB_ROOT, HUBTrainingSession  # 导入HUB相关模块
+from ultralytics.nn.tasks import attempt_load_one_weight, guess_model_task, nn, yaml_model_load  # 导入模型任务相关函数
+from ultralytics.utils import (  # 导入工具函数和常量
     ARGV,
     ASSETS,
     DEFAULT_CFG_DICT,
@@ -80,6 +80,24 @@ class Model(nn.Module, PyTorchModelHubMixin, repo_url="https://github.com/ultral
         >>> metrics = model.val()
         >>> model.export(format="onnx")
     """
+    # YOLO模型的基类，统一不同模型类型的API
+    # 
+    # 该类为YOLO模型的各种操作提供了通用接口，例如训练、验证、预测、导出和基准测试
+    # 它处理不同类型的模型，包括从本地文件、Ultralytics HUB或Triton服务器加载的模型
+    # 
+    # 属性:
+    #     callbacks (Dict): 用于模型操作中各种事件的回调函数字典
+    #     predictor (BasePredictor): 用于预测的预测器对象
+    #     model (nn.Module): 底层PyTorch模型
+    #     trainer (BaseTrainer): 用于训练模型的训练器对象
+    #     ckpt (Dict): 如果从*.pt文件加载，初始化为空字典
+    #     cfg (str): 如果从*.yaml加载，初始化为None
+    #     ckpt_path (str): 检查点路径，初始化为None
+    #     overrides (Dict): 模型配置的覆盖字典
+    #     metrics (Dict): 最新的训练/验证指标
+    #     session (HUBTrainingSession): Ultralytics HUB会话，如果适用
+    #     task (str): 模型的任务类型
+    #     model_name (str): 模型名称
 
     def __init__(
         self,
@@ -112,42 +130,63 @@ class Model(nn.Module, PyTorchModelHubMixin, repo_url="https://github.com/ultral
             >>> model = Model("path/to/model.yaml", task="detect")
             >>> model = Model("hub_model", verbose=True)
         """
-        super().__init__()
-        self.callbacks = callbacks.get_default_callbacks()
-        self.predictor = None  # reuse predictor
-        self.model = None  # model object
-        self.trainer = None  # trainer object
-        self.ckpt = {}  # if loaded from *.pt
-        self.cfg = None  # if loaded from *.yaml
-        self.ckpt_path = None
-        self.overrides = {}  # overrides for trainer object
-        self.metrics = None  # validation/training metrics
-        self.session = None  # HUB session
-        self.task = task  # task type
-        model = str(model).strip()
+        # 初始化YOLO模型类的新实例
+        # 
+        # 此构造函数根据提供的模型路径或名称设置模型。它处理各种类型的模型源，包括本地文件、
+        # Ultralytics HUB模型和Triton服务器模型。该方法初始化模型的几个重要属性，
+        # 并为训练、预测或导出等操作做好准备。
+        # 
+        # 参数:
+        #     model (Union[str, Path]): 要加载或创建的模型的路径或名称。可以是本地文件路径、
+        #         Ultralytics HUB中的模型名称或Triton服务器模型。
+        #     task (str | None): 与YOLO模型相关联的任务类型，指定其应用领域。
+        #     verbose (bool): 如果为True，则在模型初始化和后续操作期间启用详细输出。
+        # 
+        # 异常:
+        #     FileNotFoundError: 如果指定的模型文件不存在或无法访问。
+        #     ValueError: 如果模型文件或配置无效或不受支持。
+        #     ImportError: 如果特定模型类型（如HUB SDK）所需的依赖项未安装。
+        super().__init__()  # 调用父类初始化方法
+        self.callbacks = callbacks.get_default_callbacks()  # 获取默认回调函数
+        self.predictor = None  # 重用预测器，初始化为None
+        self.model = None  # 模型对象，初始化为None
+        self.trainer = None  # 训练器对象，初始化为None
+        self.ckpt = {}  # 如果从*.pt加载，初始化为空字典
+        self.cfg = None  # 如果从*.yaml加载，初始化为None
+        self.ckpt_path = None  # 检查点路径，初始化为None
+        self.overrides = {}  # 训练器对象的覆盖参数，初始化为空字典
+        self.metrics = None  # 验证/训练指标，初始化为None
+        self.session = None  # HUB会话，初始化为None
+        self.task = task  # 任务类型
+        model = str(model).strip()  # 将模型路径转换为字符串并去除首尾空格
 
         # Check if Ultralytics HUB model from https://hub.ultralytics.com
+        # 检查是否为来自https://hub.ultralytics.com的Ultralytics HUB模型
         if self.is_hub_model(model):
             # Fetch model from HUB
-            checks.check_requirements("hub-sdk>=0.0.12")
-            session = HUBTrainingSession.create_session(model)
-            model = session.model_file
-            if session.train_args:  # training sent from HUB
-                self.session = session
+            # 从HUB获取模型
+            checks.check_requirements("hub-sdk>=0.0.12")  # 检查是否安装了hub-sdk
+            session = HUBTrainingSession.create_session(model)  # 创建HUB训练会话
+            model = session.model_file  # 获取模型文件
+            if session.train_args:  # training sent from HUB  # 如果存在HUB发送的训练参数
+                self.session = session  # 设置会话
 
         # Check if Triton Server model
+        # 检查是否为Triton服务器模型
         elif self.is_triton_model(model):
-            self.model_name = self.model = model
-            self.overrides["task"] = task or "detect"  # set `task=detect` if not explicitly set
-            return
+            self.model_name = self.model = model  # 设置模型名称和模型
+            self.overrides["task"] = task or "detect"  # set `task=detect` if not explicitly set  # 如果未明确设置，则设置任务为"detect"
+            return  # 返回
 
         # Load or create new YOLO model
-        if Path(model).suffix in {".yaml", ".yml"}:
-            self._new(model, task=task, verbose=verbose)
-        else:
-            self._load(model, task=task)
+        # 加载或创建新的YOLO模型
+        if Path(model).suffix in {".yaml", ".yml"}:  # 如果模型文件是YAML格式
+            self._new(model, task=task, verbose=verbose)  # 创建新模型
+        else:  # 否则
+            self._load(model, task=task)  # 加载模型
 
         # Delete super().training for accessing self.model.training
+        # 删除super().training以便访问self.model.training
         del self.training
 
     def __call__(
@@ -179,7 +218,19 @@ class Model(nn.Module, PyTorchModelHubMixin, repo_url="https://github.com/ultral
             >>> for r in results:
             ...     print(f"Detected {len(r)} objects in image")
         """
-        return self.predict(source, stream, **kwargs)
+        # predict方法的别名，使模型实例可直接调用进行预测
+        # 
+        # 此方法通过允许直接使用所需参数调用模型实例，简化了预测过程
+        # 
+        # 参数:
+        #     source (str | Path | int | PIL.Image | np.ndarray | torch.Tensor | List | Tuple): 
+        #         要进行预测的图像源。可以是文件路径、URL、PIL图像、numpy数组、PyTorch张量或这些的列表/元组
+        #     stream (bool): 如果为True，则将输入源视为连续流进行预测
+        #     **kwargs: 用于配置预测过程的额外关键字参数
+        # 
+        # 返回:
+        #     (List[ultralytics.engine.results.Results]): 预测结果列表，每个结果都封装在Results对象中
+        return self.predict(source, stream, **kwargs)  # 调用predict方法并返回结果
 
     @staticmethod
     def is_triton_model(model: str) -> bool:
@@ -201,10 +252,19 @@ class Model(nn.Module, PyTorchModelHubMixin, repo_url="https://github.com/ultral
             >>> Model.is_triton_model("yolo11n.pt")
             False
         """
-        from urllib.parse import urlsplit
+        # 检查给定的模型字符串是否为Triton服务器URL
+        # 
+        # 该静态方法通过使用urllib.parse.urlsplit()解析其组件，确定提供的模型字符串是否表示有效的Triton服务器URL
+        # 
+        # 参数:
+        #     model (str): 要检查的模型字符串
+        # 
+        # 返回:
+        #     (bool): 如果模型字符串是有效的Triton服务器URL，则返回True，否则返回False
+        from urllib.parse import urlsplit  # 导入urlsplit函数用于解析URL
 
-        url = urlsplit(model)
-        return url.netloc and url.path and url.scheme in {"http", "grpc"}
+        url = urlsplit(model)  # 解析URL
+        return url.netloc and url.path and url.scheme in {"http", "grpc"}  # 检查是否为有效的Triton服务器URL
 
     @staticmethod
     def is_hub_model(model: str) -> bool:

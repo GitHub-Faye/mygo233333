@@ -1,56 +1,56 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license  # Ultralytics 🚀 AGPL-3.0 许可证 - 查看链接获取许可证详情
 
-import contextlib
-import importlib.metadata
-import inspect
-import json
-import logging.config
-import os
-import platform
-import re
-import subprocess
-import sys
-import threading
-import time
-import uuid
-from pathlib import Path
-from threading import Lock
-from types import SimpleNamespace
-from typing import Union
-from urllib.parse import unquote
+import contextlib  # 导入上下文管理模块
+import importlib.metadata  # 导入元数据处理模块
+import inspect  # 导入检查模块，用于检查对象
+import json  # 导入JSON处理模块
+import logging.config  # 导入日志配置模块
+import os  # 导入操作系统交互模块
+import platform  # 导入平台信息模块
+import re  # 导入正则表达式模块
+import subprocess  # 导入子进程模块
+import sys  # 导入系统相关模块
+import threading  # 导入线程模块
+import time  # 导入时间处理模块
+import uuid  # 导入UUID生成模块
+from pathlib import Path  # 导入路径处理类
+from threading import Lock  # 导入线程锁
+from types import SimpleNamespace  # 导入简单命名空间类型
+from typing import Union  # 导入类型提示工具
+from urllib.parse import unquote  # 导入URL解码函数
 
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
-import yaml
-from tqdm import tqdm as tqdm_original
+import cv2  # 导入OpenCV库
+import matplotlib.pyplot as plt  # 导入Matplotlib绘图库
+import numpy as np  # 导入NumPy数值计算库
+import torch  # 导入PyTorch深度学习库
+import yaml  # 导入YAML解析库
+from tqdm import tqdm as tqdm_original  # 导入进度条库并重命名为tqdm_original
 
-from ultralytics import __version__
+from ultralytics import __version__  # 从ultralytics导入版本号
 
-# PyTorch Multi-GPU DDP Constants
-RANK = int(os.getenv("RANK", -1))
-LOCAL_RANK = int(os.getenv("LOCAL_RANK", -1))  # https://pytorch.org/docs/stable/elastic/run.html
+# PyTorch Multi-GPU DDP Constants  # PyTorch多GPU分布式数据并行常量
+RANK = int(os.getenv("RANK", -1))  # 获取当前进程的全局排名，默认为-1
+LOCAL_RANK = int(os.getenv("LOCAL_RANK", -1))  # https://pytorch.org/docs/stable/elastic/run.html  # 获取当前进程的本地排名，默认为-1
 
-# Other Constants
-ARGV = sys.argv or ["", ""]  # sometimes sys.argv = []
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[1]  # YOLO
-ASSETS = ROOT / "assets"  # default images
-ASSETS_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0"  # assets GitHub URL
-DEFAULT_CFG_PATH = ROOT / "cfg/default.yaml"
-DEFAULT_SOL_CFG_PATH = ROOT / "cfg/solutions/default.yaml"  # Ultralytics solutions yaml path
-NUM_THREADS = min(8, max(1, os.cpu_count() - 1))  # number of YOLO multiprocessing threads
-AUTOINSTALL = str(os.getenv("YOLO_AUTOINSTALL", True)).lower() == "true"  # global auto-install mode
-VERBOSE = str(os.getenv("YOLO_VERBOSE", True)).lower() == "true"  # global verbose mode
-TQDM_BAR_FORMAT = "{l_bar}{bar:10}{r_bar}" if VERBOSE else None  # tqdm bar format
-LOGGING_NAME = "ultralytics"
-MACOS, LINUX, WINDOWS = (platform.system() == x for x in ["Darwin", "Linux", "Windows"])  # environment booleans
-ARM64 = platform.machine() in {"arm64", "aarch64"}  # ARM64 booleans
-PYTHON_VERSION = platform.python_version()
-TORCH_VERSION = torch.__version__
-TORCHVISION_VERSION = importlib.metadata.version("torchvision")  # faster than importing torchvision
-IS_VSCODE = os.environ.get("TERM_PROGRAM", False) == "vscode"
+# Other Constants  # 其他常量
+ARGV = sys.argv or ["", ""]  # sometimes sys.argv = []  # 获取命令行参数，如果为空则使用默认值
+FILE = Path(__file__).resolve()  # 获取当前文件的绝对路径
+ROOT = FILE.parents[1]  # YOLO  # 获取YOLO的根目录（当前文件的上上级目录）
+ASSETS = ROOT / "assets"  # default images  # 资源目录，用于存放默认图像
+ASSETS_URL = "https://github.com/ultralytics/assets/releases/download/v0.0.0"  # assets GitHub URL  # 资源的GitHub URL
+DEFAULT_CFG_PATH = ROOT / "cfg/default.yaml"  # 默认配置文件路径
+DEFAULT_SOL_CFG_PATH = ROOT / "cfg/solutions/default.yaml"  # Ultralytics solutions yaml path  # Ultralytics解决方案的YAML配置路径
+NUM_THREADS = min(8, max(1, os.cpu_count() - 1))  # number of YOLO multiprocessing threads  # YOLO多进程线程数，最小1，最大8
+AUTOINSTALL = str(os.getenv("YOLO_AUTOINSTALL", True)).lower() == "true"  # global auto-install mode  # 全局自动安装模式
+VERBOSE = str(os.getenv("YOLO_VERBOSE", True)).lower() == "true"  # global verbose mode  # 全局详细模式
+TQDM_BAR_FORMAT = "{l_bar}{bar:10}{r_bar}" if VERBOSE else None  # tqdm bar format  # 进度条格式，仅在详细模式下显示
+LOGGING_NAME = "ultralytics"  # 日志名称
+MACOS, LINUX, WINDOWS = (platform.system() == x for x in ["Darwin", "Linux", "Windows"])  # environment booleans  # 环境布尔值，判断操作系统类型
+ARM64 = platform.machine() in {"arm64", "aarch64"}  # ARM64 booleans  # 判断是否为ARM64架构
+PYTHON_VERSION = platform.python_version()  # Python版本号
+TORCH_VERSION = torch.__version__  # PyTorch版本号
+TORCHVISION_VERSION = importlib.metadata.version("torchvision")  # faster than importing torchvision  # torchvision版本号，比导入torchvision更快
+IS_VSCODE = os.environ.get("TERM_PROGRAM", False) == "vscode"  # 判断是否在VS Code中运行
 HELP_MSG = """
     Examples for running Ultralytics:
 
@@ -106,17 +106,17 @@ HELP_MSG = """
     Docs: https://docs.ultralytics.com
     Community: https://community.ultralytics.com
     GitHub: https://github.com/ultralytics/ultralytics
-    """
+    """  # 帮助信息，展示了Ultralytics的使用示例和命令行接口语法
 
-# Settings and Environment Variables
-torch.set_printoptions(linewidth=320, precision=4, profile="default")
-np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})  # format short g, %precision=5
-cv2.setNumThreads(0)  # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
-os.environ["NUMEXPR_MAX_THREADS"] = str(NUM_THREADS)  # NumExpr max threads
-os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"  # for deterministic training to avoid CUDA warning
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # suppress verbose TF compiler warnings in Colab
-os.environ["TORCH_CPP_LOG_LEVEL"] = "ERROR"  # suppress "NNPACK.cpp could not initialize NNPACK" warnings
-os.environ["KINETO_LOG_LEVEL"] = "5"  # suppress verbose PyTorch profiler output when computing FLOPs
+# Settings and Environment Variables  # 设置和环境变量
+torch.set_printoptions(linewidth=320, precision=4, profile="default")  # 设置PyTorch打印选项，行宽、精度和配置文件
+np.set_printoptions(linewidth=320, formatter={"float_kind": "{:11.5g}".format})  # format short g, %precision=5  # 设置NumPy打印选项，行宽和浮点数格式化
+cv2.setNumThreads(0)  # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)  # 防止OpenCV多线程（与PyTorch DataLoader不兼容）
+os.environ["NUMEXPR_MAX_THREADS"] = str(NUM_THREADS)  # NumExpr max threads  # 设置NumExpr最大线程数
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"  # for deterministic training to avoid CUDA warning  # 用于确定性训练，避免CUDA警告
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # suppress verbose TF compiler warnings in Colab  # 在Colab中抑制详细的TensorFlow编译器警告
+os.environ["TORCH_CPP_LOG_LEVEL"] = "ERROR"  # suppress "NNPACK.cpp could not initialize NNPACK" warnings  # 抑制"NNPACK.cpp无法初始化NNPACK"警告
+os.environ["KINETO_LOG_LEVEL"] = "5"  # suppress verbose PyTorch profiler output when computing FLOPs  # 在计算FLOPs时抑制详细的PyTorch分析器输出
 
 
 class TQDM(tqdm_original):
